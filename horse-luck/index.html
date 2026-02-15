@@ -1,12 +1,92 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>Mimi 測試</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>2026 馬年大吉 | Mimi</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <style>
+        :root {
+            --gold: #fbc531;
+            --env-front: #a30000; 
+            --env-back: #7a0000;
+            --env-flap: #c40000;
+            --bg: #1a1a1a;
+        }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { margin: 0; background: var(--bg); height: 100vh; display: flex; justify-content: center; align-items: center; overflow: hidden; }
+
+        .scene { position: relative; width: 340px; height: 240px; transform: translateY(-100vh); }
+        .envelope-back { position: absolute; width: 100%; height: 100%; background: var(--env-back); border-radius: 5px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); z-index: 1; }
+        
+        .card {
+            position: absolute; top: 10px; left: 15px; width: 310px; height: 210px;
+            background: #fff; border-radius: 4px; z-index: 2;
+            transform: translateY(20px); visibility: hidden;
+            overflow: hidden; border: 1px solid #ddd;
+        }
+        .card img { width: 100%; height: 100%; object-fit: cover; }
+
+        .envelope-front {
+            position: absolute; width: 100%; height: 100%; background: var(--env-front);
+            clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%, 0 0, 50% 50%, 100% 0);
+            z-index: 3; border-radius: 0 0 5px 5px; border-bottom: 2px solid var(--gold);
+        }
+        .flap {
+            position: absolute; top: 0; width: 0; height: 0;
+            border-left: 170px solid transparent; border-right: 170px solid transparent;
+            border-top: 130px solid var(--env-flap);
+            transform-origin: top; z-index: 4;
+        }
+        .guide {
+            position: absolute; bottom: -80px; width: 100%; text-align: center;
+            color: var(--gold); font-size: 13px; letter-spacing: 3px; opacity: 0; z-index: 10;
+        }
+        .guide span { display: block; animation: bounce 1.5s infinite; font-size: 20px; }
+        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+
+        .is-open-full {
+            position: fixed !important; top: 0 !important; left: 0 !important;
+            width: 100vw !important; height: 100vh !important;
+            z-index: 999 !important; display: flex; justify-content: center; align-items: center; background: #fff;
+        }
+        .is-open-full img { width: 100%; height: 100%; object-fit: contain; }
+    </style>
 </head>
 <body>
-    <h1 style="text-align:center; margin-top:50px;">
-        🎉 Luck 網站測試成功！Mimi 妳看到這行了嗎？
-    </h1>
+<div class="scene" id="scene">
+    <div class="flap" id="flap"></div>
+    <div class="envelope-back"></div>
+    <div class="card" id="card">
+        <img src="luck.png" alt="馬年大吉">
+    </div>
+    <div class="envelope-front"></div>
+    <div class="guide" id="guide"><span>▲</span>SWIPE UP TO VIEW</div>
+</div>
+<script>
+    const scene = document.getElementById('scene'), flap = document.getElementById('flap'), card = document.getElementById('card'), guide = document.getElementById('guide');
+    let startY = 0;
+    window.onload = () => {
+        const tl = gsap.timeline();
+        tl.to(scene, { y: 0, duration: 1.2, ease: "power3.out" })
+          .to(flap, { rotateX: 180, duration: 0.9, ease: "power2.inOut" }, "+=0.3")
+          .set(flap, { zIndex: 0 })
+          .to(card, { visibility: "visible", y: -35, duration: 0.6, ease: "back.out(2)" })
+          .to(guide, { opacity: 1, duration: 0.4 });
+    };
+    function launchCard() {
+        const tl = gsap.timeline();
+        gsap.to(guide, { opacity: 0, duration: 0.2 });
+        tl.to(card, { y: "-120vh", duration: 0.7, ease: "power3.in" })
+          .to(scene, { opacity: 0, duration: 0.3 }, "-=0.3")
+          .add(() => {
+              card.classList.add('is-open-full');
+              gsap.fromTo(card, { scale: 0.8, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.5 });
+          });
+    }
+    card.addEventListener('touchstart', (e) => { startY = e.touches[0].pageY; });
+    card.addEventListener('touchend', (e) => { if (startY - e.changedTouches[0].pageY > 50) launchCard(); });
+    card.addEventListener('click', launchCard);
+</script>
 </body>
 </html>
