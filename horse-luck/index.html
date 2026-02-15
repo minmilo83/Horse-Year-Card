@@ -20,7 +20,7 @@
             overflow: hidden; font-family: "Arial", sans-serif; 
         }
 
-        /* 背景星光 */
+        /* 高級背景 */
         .sparkles {
             position: fixed; width: 100%; height: 100%;
             background: radial-gradient(circle at center, #2e0000 0%, #000 100%);
@@ -32,86 +32,98 @@
             opacity: 0.3;
         }
 
-        /* 場景容器 */
-        .scene { position: relative; width: 320px; height: 220px; z-index: 10; }
+        /* 核心容器：確保所有東西絕對居中 */
+        .viewport {
+            position: relative;
+            display: flex; justify-content: center; align-items: center;
+            width: 100vw; height: 100vh;
+        }
+
+        .scene { 
+            position: relative; 
+            width: 320px; 
+            height: 220px; 
+            z-index: 10;
+        }
 
         /* 信封後層 */
         .envelope-back {
-            position: absolute; width: 100%; height: 100%; bottom: 0;
+            position: absolute; width: 100%; height: 100%; top: 0; left: 0;
             background: var(--red-deep);
             border-radius: 8px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
             z-index: 1;
         }
 
-        /* 賀卡本體 (關鍵) */
+        /* 賀卡：藏在信封裡 */
         .card {
             position: absolute; 
-            left: 10px; right: 10px; bottom: 10px; /* 預設在信封內部 */
-            height: 200px; /* 卡片原始高度 */
+            top: 50%; left: 50%;
+            width: 300px; /* 略小於信封 */
+            height: 200px;
             background: #fff;
-            z-index: 2; /* 在後層之上，前層之下 */
+            z-index: 2; /* 夾在中間 */
             border-radius: 4px;
             overflow: hidden;
-            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
-            transform-origin: center center;
+            transform: translate(-50%, -50%); /* 初始完全置中隱藏 */
+            visibility: hidden;
         }
+        .card img { width: 100%; height: 100%; object-fit: cover; }
 
-        .card img { 
-            width: 100%; height: 100%; 
-            object-fit: contain; /* 確保內容不被切掉，改用 contain */
-            background: #fff; /* 圖片旁留白底，比較像卡片 */
-        }
-
-        /* 信封前層 (口袋) */
+        /* 信封前口袋：擋住卡片 */
         .envelope-front {
-            position: absolute; bottom: 0; width: 100%; height: 100%;
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: linear-gradient(160deg, var(--red-deep), var(--red-bright));
             clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%, 0 0, 50% 55%, 100% 0);
-            z-index: 5; /* 必須蓋住卡片 */
+            z-index: 3;
             border-radius: 0 0 8px 8px;
-            pointer-events: none; /* 讓點擊能穿透到卡片 */
+            pointer-events: none;
             border-bottom: 2px solid var(--gold);
         }
 
         /* 信封上蓋 */
         .flap {
-            position: absolute; top: 0; width: 100%; height: 100%;
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: var(--red-bright);
             clip-path: polygon(0 0, 50% 55%, 100% 0);
             transform-origin: top; 
-            z-index: 6; /* 最上層 */
+            z-index: 4;
             filter: drop-shadow(0 2px 5px rgba(0,0,0,0.3));
         }
 
-        /* 提示文字 */
         .guide {
-            position: absolute; bottom: -80px; width: 100%; text-align: center;
-            color: var(--gold); font-size: 13px; letter-spacing: 2px;
+            position: absolute; bottom: 10%; width: 100%; text-align: center;
+            color: var(--gold); font-size: 13px; letter-spacing: 1px;
             opacity: 0; z-index: 20; font-weight: bold;
         }
         .guide span { display: block; animation: bounce 1.5s infinite; font-size: 20px; margin-bottom: 5px;}
         @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
 
+        /* 全螢幕模式樣式 */
+        .is-full-view {
+            z-index: 100 !important;
+        }
     </style>
 </head>
 <body>
 
 <div class="sparkles"></div>
 
-<div class="scene" id="scene">
-    <div class="flap" id="flap"></div>
-    <div class="envelope-back"></div>
-    
-    <div class="card" id="card">
-        <img src="luck.png" alt="馬年大吉">
-    </div>
+<div class="viewport">
+    <div class="scene" id="scene">
+        <div class="flap" id="flap"></div>
+        <div class="envelope-back"></div>
+        
+        <div class="card" id="card">
+            <img src="luck.png" alt="馬年大吉">
+        </div>
 
-    <div class="envelope-front" id="env-front"></div>
-    
-    <div class="guide" id="guide">
-        <span>▲</span>
-        SWIPE UP TO RECEIVE LUCK
+        <div class="envelope-front"></div>
+        
+        <div class="guide" id="guide">
+            <span>▲</span>
+            SWIPE UP TO RECEIVE LUCK
+        </div>
     </div>
 </div>
 
@@ -120,105 +132,68 @@
     const flap = document.getElementById('flap');
     const card = document.getElementById('card');
     const guide = document.getElementById('guide');
-    const envFront = document.getElementById('env-front');
-    const envBack = document.querySelector('.envelope-back');
 
-    // 1. 初始化動畫：信封掉下來 -> 開蓋 -> 卡片露出一點點
     window.onload = () => {
         const tl = gsap.timeline();
         
-        // 初始設定
-        gsap.set(scene, { y: -500, opacity: 0 });
-        gsap.set(card, { y: 0 }); // 卡片躲在信封裡
+        // 初始：信封在中間，卡片完全隱藏
+        gsap.set(scene, { y: 100, opacity: 0 });
 
-        tl.to(scene, { y: 0, opacity: 1, duration: 1, ease: "bounce.out" })
-          .to(flap, { rotateX: 180, duration: 0.8, ease: "power2.inOut" })
-          .set(flap, { zIndex: 1 }) // 蓋子放到後面
-          // ★ 這裡只露出一小角 (往上移 60px)
-          .to(card, { y: -60, duration: 0.6, ease: "back.out(1.5)" }) 
+        tl.to(scene, { y: 0, opacity: 1, duration: 1, ease: "power3.out" })
+          .to(flap, { rotateX: 180, duration: 0.8, ease: "power2.inOut" }) // 1. 打開蓋子
+          .set(flap, { zIndex: 0 }) 
+          .to(card, { visibility: "visible", y: -60, duration: 0.7, ease: "back.out(1.2)" }) // 2. 探出一小角
           .to(guide, { opacity: 1, duration: 0.5 });
     };
 
-    // 2. 互動邏輯
     let startY = 0;
     let isLaunched = false;
 
     document.addEventListener('touchstart', (e) => startY = e.touches[0].pageY);
-    
-    // 讓使用者可以稍微拉動卡片 (跟手感)
     document.addEventListener('touchmove', (e) => {
         if (isLaunched) return;
         let diff = startY - e.touches[0].pageY;
         if (diff > 0 && diff < 100) {
-            gsap.set(card, { y: -60 - diff }); // 在原本露出基礎上再往上拉
+            gsap.set(card, { y: -60 - diff }); // 跟隨手指
         }
     });
 
     document.addEventListener('touchend', (e) => {
         if (isLaunched) return;
-        let diff = startY - e.changedTouches[0].pageY;
-        
-        if (diff > 80) {
-            launchCardSeamless();
+        if (startY - e.changedTouches[0].pageY > 60) {
+            launchSeamless();
         } else {
-            // 沒拉成功，彈回去
             gsap.to(card, { y: -60, duration: 0.3 });
         }
     });
 
-    // ★★★ 核心魔法：無縫放大 ★★★
-    function launchCardSeamless() {
+    function launchSeamless() {
         isLaunched = true;
-        
-        // 1. 隱藏提示
-        gsap.to(guide, { opacity: 0, duration: 0.2 });
-
-        // 2. 獲取卡片當前的位置與大小 (Snapshot)
-        const state = Flip.getState(card);
-        const rect = card.getBoundingClientRect();
-
-        // 3. 設定卡片為 Fixed 定位，讓它脫離信封控制，但保持在原地
-        card.style.position = 'fixed';
-        card.style.top = rect.top + 'px';
-        card.style.left = rect.left + 'px';
-        card.style.width = rect.width + 'px';
-        card.style.height = rect.height + 'px';
-        card.style.zIndex = 999; // 最上層
-        card.style.transform = 'none'; // 清除之前的位移
-        card.style.borderRadius = '4px';
-
-        // 4. 開始動畫
         const tl = gsap.timeline();
 
-        // A. 信封往下掉 (退場)
-        tl.to([envFront, envBack, flap], { 
-            y: 200, opacity: 0, duration: 0.6, ease: "power2.in" 
-        }, 0);
+        gsap.to(guide, { opacity: 0, duration: 0.2 });
 
-        // B. 卡片同時變大充滿螢幕 (進場)
+        // 核心動畫：卡片放大與信封退場同時進行
         tl.to(card, {
-            top: 0,
-            left: 0,
-            width: '100vw',
-            height: '100vh',
-            borderRadius: 0,
+            y: 0, // 回到垂直中心點
+            scale: 1,
+            width: "100vw",
+            height: "100vh",
             duration: 1,
             ease: "power2.inOut",
-            onComplete: () => {
-                // 動畫結束後，確保圖片適應方式
-                const img = card.querySelector('img');
-                img.style.objectFit = 'contain';
+            onStart: () => {
+                card.classList.add('is-full-view');
+                // 進入全螢幕時切換成 contain 確保手機看得到全圖
+                card.querySelector('img').style.objectFit = "contain";
             }
-        }, 0); // 這裡的 0 代表跟信封掉落「同時」發生
+        }, 0)
+        .to(scene.querySelectorAll('.envelope-back, .envelope-front, #flap'), {
+            opacity: 0,
+            scale: 0.8,
+            duration: 0.6,
+            ease: "power2.in"
+        }, 0);
     }
-
-    // 簡單的手動 Flip 輔助函數 (因為我們沒載入 Flip plugin)
-    const Flip = {
-        getState: (el) => {
-            const rect = el.getBoundingClientRect();
-            return { top: rect.top, left: rect.left, width: rect.width, height: rect.height };
-        }
-    };
 </script>
 </body>
 </html>
