@@ -3,21 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>2026 馬年大吉 | Mimi</title>
+    <title>2026 馬年大吉</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <style>
         :root {
             --gold: #f1c40f;
-            --gold-shiny: #fff200;
             --red-deep: #930000;
             --red-bright: #d40000;
             --bg: #1a0000;
         }
 
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { margin: 0; background: var(--bg); height: 100vh; display: flex; justify-content: center; align-items: center; overflow: hidden; font-family: "PingFang TC", sans-serif; }
+        body { margin: 0; background: var(--bg); height: 100vh; display: flex; justify-content: center; align-items: center; overflow: hidden; font-family: "Arial", sans-serif; }
 
-        /* 金粉背景 */
         .sparkles {
             position: fixed; width: 100%; height: 100%;
             background: radial-gradient(circle at center, #3d0000 0%, #1a0000 100%);
@@ -29,10 +27,8 @@
             opacity: 0.3;
         }
 
-        /* 總場景 */
         .scene { position: relative; width: 340px; height: 240px; transform: translateY(-100vh); }
 
-        /* 精緻信封後蓋 */
         .envelope-back {
             position: absolute; width: 100%; height: 100%;
             background: linear-gradient(135deg, var(--red-deep), var(--red-bright));
@@ -41,16 +37,15 @@
             z-index: 1;
         }
 
-        /* 賀卡：精準對位 */
         .card {
             position: absolute; top: 10px; left: 15px; width: 310px; height: 210px;
             background: #fff; border-radius: 4px; z-index: 2;
             transform: translateY(20px); visibility: hidden;
             box-shadow: 0 0 20px rgba(0,0,0,0.3); border: 1px solid #ddd;
+            transition: all 0.5s ease;
         }
         .card img { width: 100%; height: 100%; object-fit: cover; }
 
-        /* 精緻前口袋 */
         .envelope-front {
             position: absolute; width: 100%; height: 100%;
             background: var(--red-deep);
@@ -59,7 +54,6 @@
             border-bottom: 3px solid var(--gold);
         }
 
-        /* 華麗上蓋 */
         .flap {
             position: absolute; top: 0; width: 0; height: 0;
             border-left: 170px solid transparent; border-right: 170px solid transparent;
@@ -68,22 +62,22 @@
             filter: drop-shadow(0 5px 15px rgba(0,0,0,0.5));
         }
 
-        /* 互動提示 */
         .guide {
             position: absolute; bottom: -90px; width: 100%; text-align: center;
-            color: var(--gold); font-size: 14px; letter-spacing: 4px; font-weight: bold;
+            color: var(--gold); font-size: 14px; letter-spacing: 1px; font-weight: bold;
             opacity: 0; z-index: 10; text-shadow: 0 0 10px var(--gold);
         }
         .guide span { display: block; animation: bounce 1.5s infinite; font-size: 24px; }
         @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-12px); } }
 
-        /* 全螢幕大賀卡 */
+        /* 全螢幕放大樣式 */
         .fullscreen {
             position: fixed !important; top: 0 !important; left: 0 !important;
             width: 100vw !important; height: 100vh !important;
             z-index: 999 !important; background: #fff;
             display: flex; justify-content: center; align-items: center;
-            opacity: 0; transform: scale(0.8);
+            border-radius: 0 !important; border: none !important;
+            transform: none !important;
         }
         .fullscreen img { width: 100%; height: 100%; object-fit: contain; }
     </style>
@@ -101,7 +95,7 @@
     <div class="envelope-front"></div>
     <div class="guide" id="guide">
         <span>▲</span>
-        向上滑動抽好運
+        SWIPE UP TO RECEIVE LUCK
     </div>
 </div>
 
@@ -111,7 +105,6 @@
     const card = document.getElementById('card');
     const guide = document.getElementById('guide');
 
-    // 1. 進場動畫
     window.onload = () => {
         const tl = gsap.timeline();
         tl.to(scene, { y: 0, duration: 1.5, ease: "bounce.out" })
@@ -121,7 +114,6 @@
           .to(guide, { opacity: 1, duration: 0.5 });
     };
 
-    // 2. 精準滑動偵測
     let startY = 0;
     let isLaunched = false;
 
@@ -133,8 +125,6 @@
         if (isLaunched) return;
         let moveY = e.touches[0].pageY;
         let diff = startY - moveY;
-
-        // 跟隨手指微動感
         if (diff > 0 && diff < 100) {
             gsap.set(card, { y: -40 - diff });
         }
@@ -143,11 +133,9 @@
     document.addEventListener('touchend', (e) => {
         if (isLaunched) return;
         let endY = e.changedTouches[0].pageY;
-        
-        if (startY - endY > 80) { // 滑動超過80px才觸發
+        if (startY - endY > 80) {
             launchCard();
         } else {
-            // 沒滑夠，彈回去
             gsap.to(card, { y: -40, duration: 0.3 });
         }
     }, false);
@@ -155,20 +143,21 @@
     function launchCard() {
         isLaunched = true;
         const tl = gsap.timeline();
-
-        // 隱藏提示
         gsap.to(guide, { opacity: 0, duration: 0.2 });
-
-        // 動畫：賀卡飛出，信封掉落消失
+        
+        // 1. 賀卡飛出
         tl.to(card, { y: "-120vh", duration: 0.8, ease: "power3.in" })
+          // 2. 信封同時掉落消失
           .to(scene, { y: "100vh", opacity: 0, duration: 0.6, ease: "power2.in" }, "-=0.5")
+          // 3. 賀卡變大回歸
           .add(() => {
-              // 進入全螢幕
               card.classList.add('fullscreen');
-              gsap.to(card, { opacity: 1, scale: 1, duration: 0.6, ease: "power2.out" });
+              gsap.fromTo(card, 
+                  { scale: 0.5, opacity: 0, y: 0 }, 
+                  { scale: 1, opacity: 1, duration: 0.8, ease: "power2.out" }
+              );
           });
     }
 </script>
-
 </body>
 </html>
