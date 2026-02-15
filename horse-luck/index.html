@@ -69,7 +69,7 @@
         .guide span { display: block; animation: bounce 1.5s infinite; font-size: 24px; }
         @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-12px); } }
 
-        /* 全螢幕樣式修正 */
+        /* 全螢幕樣式強制生效 */
         .fullscreen {
             position: fixed !important; 
             top: 0 !important; 
@@ -83,6 +83,8 @@
             align-items: center !important;
             border: none !important;
             border-radius: 0 !important;
+            visibility: visible !important; /* 強制顯示 */
+            opacity: 1 !important;
         }
         .fullscreen img { 
             width: 100% !important; 
@@ -154,18 +156,19 @@
         const tl = gsap.timeline();
         gsap.to(guide, { opacity: 0, duration: 0.2 });
         
-        // 1. 賀卡飛出，信封同時掉落
+        // 1. 賀卡飛出
         tl.to(card, { y: "-120vh", duration: 0.8, ease: "power3.in" })
+          // 2. 信封同時掉落
           .to(scene, { y: "100vh", opacity: 0, duration: 0.6, ease: "power2.in" }, "-=0.5")
           .add(() => {
-              // 2. 清除 GSAP 的行內樣式，確保 CSS 的 fullscreen 能生效
+              // 3. 先清除所有干擾，並立刻加上全螢幕 class
               gsap.set(card, { clearProps: "all" }); 
               card.classList.add('fullscreen');
               
-              // 3. 從中央淡入放大
+              // 4. 強制執行一次進入動畫，確保它一定會顯示並放大
               gsap.fromTo(card, 
-                  { scale: 0.8, opacity: 0 }, 
-                  { scale: 1, opacity: 1, duration: 0.6, ease: "power2.out" }
+                  { scale: 0.1, opacity: 0 }, 
+                  { scale: 1, opacity: 1, duration: 0.8, ease: "power2.out" }
               );
           });
     }
