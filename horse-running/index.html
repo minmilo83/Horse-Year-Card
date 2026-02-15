@@ -2,28 +2,153 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>2026 駿馬奔騰 | Mimi</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>2026 駿馬奔騰</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <style>
-        :root { --env-color: #d63031; --env-dark: #b71c1c; --bg-color: #f7f1e3; }
-        body { margin: 0; height: 100vh; display: flex; justify-content: center; align-items: center; background: var(--bg-color); overflow: hidden; font-family: system-ui, sans-serif; }
-        body::after { content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; background-image: radial-gradient(circle, #fbc531 1px, transparent 1px); background-size: 50px 50px; opacity: 0.2; }
-        .envelope-wrapper { position: relative; width: 300px; height: 200px; background: var(--env-dark); border-radius: 0 0 10px 10px; cursor: pointer; box-shadow: 0 10px 30px rgba(0,0,0,0.2); transition: transform 0.3s; z-index: 10; }
-        .envelope-wrapper::before { content: ""; position: absolute; top: 0; left: 0; z-index: 30; border-left: 150px solid transparent; border-right: 150px solid transparent; border-top: 100px solid var(--env-color); transform-origin: top; transition: transform 0.5s 0.3s; }
-        .card { position: absolute; bottom: 5px; left: 10px; width: 280px; height: 180px; background: white; z-index: 20; transition: transform 0.6s; border-radius: 5px; overflow: hidden; box-shadow: 0 -5px 15px rgba(0,0,0,0.1); }
+        :root {
+            --gold: #f1c40f;
+            --gold-shiny: #fff200;
+            --red-deep: #930000;
+            --red-bright: #d40000;
+            --bg: #1a0000;
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { margin: 0; background: var(--bg); height: 100vh; display: flex; justify-content: center; align-items: center; overflow: hidden; font-family: "Arial", sans-serif; }
+
+        .sparkles {
+            position: fixed; width: 100%; height: 100%;
+            background: radial-gradient(circle at center, #3d0000 0%, #1a0000 100%);
+            z-index: -1;
+        }
+        .sparkles::after {
+            content: ""; position: absolute; width: 100%; height: 100%;
+            background-image: url('https://www.transparenttextures.com/patterns/stardust.png');
+            opacity: 0.3;
+        }
+
+        .scene { position: relative; width: 340px; height: 240px; transform: translateY(-100vh); }
+
+        .envelope-back {
+            position: absolute; width: 100%; height: 100%;
+            background: linear-gradient(135deg, var(--red-deep), var(--red-bright));
+            border-radius: 8px; border: 2px solid var(--gold);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+            z-index: 1;
+        }
+
+        .card {
+            position: absolute; top: 10px; left: 15px; width: 310px; height: 210px;
+            background: #fff; border-radius: 4px; z-index: 2;
+            transform: translateY(20px); visibility: hidden;
+            box-shadow: 0 0 20px rgba(0,0,0,0.3); border: 1px solid #ddd;
+        }
         .card img { width: 100%; height: 100%; object-fit: cover; }
-        .envelope-wrapper.open::before { transform: rotateX(180deg); z-index: 10; }
-        .envelope-wrapper.open .card { transform: translateY(-150px); }
-        .hint { position: absolute; bottom: -50px; width: 100%; text-align: center; color: var(--env-color); font-weight: bold; animation: bounce 2s infinite; }
-        @keyframes bounce { 0%, 100% { opacity: 0.4; } 50% { opacity: 1; } }
+
+        .envelope-front {
+            position: absolute; width: 100%; height: 100%;
+            background: var(--red-deep);
+            clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%, 0 0, 50% 55%, 100% 0);
+            z-index: 3; border-radius: 0 0 8px 8px;
+            border-bottom: 3px solid var(--gold);
+        }
+
+        .flap {
+            position: absolute; top: 0; width: 0; height: 0;
+            border-left: 170px solid transparent; border-right: 170px solid transparent;
+            border-top: 135px solid var(--red-bright);
+            transform-origin: top; z-index: 4;
+            filter: drop-shadow(0 5px 15px rgba(0,0,0,0.5));
+        }
+
+        .guide {
+            position: absolute; bottom: -90px; width: 100%; text-align: center;
+            color: var(--gold); font-size: 14px; letter-spacing: 2px; font-weight: bold;
+            opacity: 0; z-index: 10; text-shadow: 0 0 10px var(--gold);
+        }
+        .guide span { display: block; animation: bounce 1.5s infinite; font-size: 24px; }
+        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-12px); } }
+
+        .fullscreen {
+            position: fixed !important; top: 0 !important; left: 0 !important;
+            width: 100vw !important; height: 100vh !important;
+            z-index: 999 !important; background: #fff;
+            display: flex; justify-content: center; align-items: center;
+            opacity: 0; transform: scale(0.8);
+        }
+        .fullscreen img { width: 100%; height: 100%; object-fit: contain; }
     </style>
 </head>
 <body>
-    <div class="envelope-wrapper" onclick="this.classList.toggle('open')">
-        <div class="hint">點擊開啟 Mimi 的祝福 🧧</div>
-        <div class="card">
-            <img src="../1000024890.png" alt="駿馬奔騰">
-        </div>
+
+<div class="sparkles"></div>
+
+<div class="scene" id="scene">
+    <div class="flap" id="flap"></div>
+    <div class="envelope-back"></div>
+    <div class="card" id="card">
+        <img src="running.png" alt="駿馬奔騰">
     </div>
+    <div class="envelope-front"></div>
+    <div class="guide" id="guide">
+        <span>▲</span>
+        SWIPE UP TO VIEW
+    </div>
+</div>
+
+<script>
+    const scene = document.getElementById('scene');
+    const flap = document.getElementById('flap');
+    const card = document.getElementById('card');
+    const guide = document.getElementById('guide');
+
+    window.onload = () => {
+        const tl = gsap.timeline();
+        tl.to(scene, { y: 0, duration: 1.5, ease: "bounce.out" })
+          .to(flap, { rotateX: 180, duration: 1, ease: "power2.inOut" }, "+=0.5")
+          .set(flap, { zIndex: 0 })
+          .to(card, { visibility: "visible", y: -40, duration: 0.8, ease: "back.out(1.5)" })
+          .to(guide, { opacity: 1, duration: 0.5 });
+    };
+
+    let startY = 0;
+    let isLaunched = false;
+
+    document.addEventListener('touchstart', (e) => {
+        startY = e.touches[0].pageY;
+    }, false);
+
+    document.addEventListener('touchmove', (e) => {
+        if (isLaunched) return;
+        let moveY = e.touches[0].pageY;
+        let diff = startY - moveY;
+        if (diff > 0 && diff < 100) {
+            gsap.set(card, { y: -40 - diff });
+        }
+    }, false);
+
+    document.addEventListener('touchend', (e) => {
+        if (isLaunched) return;
+        let endY = e.changedTouches[0].pageY;
+        if (startY - endY > 80) {
+            launchCard();
+        } else {
+            gsap.to(card, { y: -40, duration: 0.3 });
+        }
+    }, false);
+
+    function launchCard() {
+        isLaunched = true;
+        const tl = gsap.timeline();
+        gsap.to(guide, { opacity: 0, duration: 0.2 });
+        tl.to(card, { y: "-120vh", duration: 0.8, ease: "power3.in" })
+          .to(scene, { y: "100vh", opacity: 0, duration: 0.6, ease: "power2.in" }, "-=0.5")
+          .add(() => {
+              card.classList.add('fullscreen');
+              gsap.to(card, { opacity: 1, scale: 1, duration: 0.6, ease: "power2.out" });
+          });
+    }
+</script>
 </body>
 </html>
