@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2026 駿馬奔騰 | Mimi</title>
+    <style>
+        :root { --env-color: #d63031; --env-dark: #b71c1c; --bg-color: #f7f1e3; }
+        body { margin: 0; height: 100vh; display: flex; justify-content: center; align-items: center; background: var(--bg-color); overflow: hidden; font-family: system-ui, sans-serif; }
+        body::after { content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; background-image: radial-gradient(circle, #fbc531 1px, transparent 1px); background-size: 50px 50px; opacity: 0.2; }
+        .envelope-wrapper { position: relative; width: 300px; height: 200px; background: var(--env-dark); border-radius: 0 0 10px 10px; cursor: pointer; box-shadow: 0 10px 30px rgba(0,0,0,0.2); transition: transform 0.3s; z-index: 10; }
+        .envelope-wrapper::before { content: ""; position: absolute; top: 0; left: 0; z-index: 30; border-left: 150px solid transparent; border-right: 150px solid transparent; border-top: 100px solid var(--env-color); transform-origin: top; transition: transform 0.5s 0.3s; }
+        .card { position: absolute; bottom: 5px; left: 10px; width: 280px; height: 180px; background: white; z-index: 20; transition: transform 0.6s; border-radius: 5px; overflow: hidden; box-shadow: 0 -5px 15px rgba(0,0,0,0.1); }
+        .card img { width: 100%; height: 100%; object-fit: cover; }
+        .envelope-wrapper.open::before { transform: rotateX(180deg); z-index: 10; }
+        .envelope-wrapper.open .card { transform: translateY(-150px); }
+        .hint { position: absolute; bottom: -50px; width: 100%; text-align: center; color: var(--env-color); font-weight: bold; animation: bounce 2s infinite; }
+        @keyframes bounce { 0%, 100% { opacity: 0.4; } 50% { opacity: 1; } }
+    </style>
+</head>
+<body>
+    <div class="envelope-wrapper" onclick="this.classList.toggle('open')">
+        <div class="hint">點擊開啟 Mimi 的祝福 🧧</div>
+        <div class="card">
+            <img src="../1000024890.png" alt="駿馬奔騰">
+        </div>
+    </div>
+</body>
+</html>
